@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <OutputType>Library</OutputType>
+    <RootNamespace>DH.RateLimter</RootNamespace>
+    <AssemblyName>DH.RateLimter</AssemblyName>
+    <AssemblyTitle>限流管理库</AssemblyTitle>
+    <Description>使用DH.RateLimter可以使您轻松实现WebApi接口的限流管理。DH.RateLimter支持IP、用户身份、Request Header、Request QueryString等多种限流策略，支持黑名单和白名单功能，支持全局拦截和单独Api拦截。令牌桶算法和漏桶算法参考https://github.com/duyanming/AnnoDemo，其他限制参考https://github.com/kulend/Dnc.Api.Throttle</Description>
+    <Company>湖北登灏科技有限公司</Company>
+    <Copyright>©2020-2024 湖北登灏科技有限公司</Copyright>
+    <VersionPrefix>3.8</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
+    <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+    <FileVersion>$(Version)</FileVersion>
+    <AssemblyVersion>$(VersionPrefix).*</AssemblyVersion>
+    <Deterministic>false</Deterministic>
+    <OutputPath>..\Bin</OutputPath>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>1701;1702;1591;NU5104;NU1505;NETSDK1138;CS7035</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--<IsPackable>true</IsPackable>-->
+    <PackageId>$(AssemblyName)</PackageId>
+    <Authors>$(Company)</Authors>
+    <PackageProjectUrl>https://www.haocoding.com/</PackageProjectUrl>
+    <PackageIcon>DH.png</PackageIcon>
+    <RepositoryUrl>https://github.com/PeiKeSmart/Pek.Common</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>湖北登灏科技有限公司;DH组件;DH;$(AssemblyName)</PackageTags>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile></PackageReadmeFile>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <!--<GeneratePackageOnBuild>true</GeneratePackageOnBuild>-->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DH.NRedis" Version="3.8.2024.920-beta0130" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Pek.AspNetCore" Version="3.7.2024.920-beta0829" />
+    <PackageReference Include="Pek.VirtualFileSystem" Version="3.7.2024.920-beta0209" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Doc\DH.png" Link="DH.png" PackagePath="\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Readme.MD">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

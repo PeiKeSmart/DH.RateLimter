@@ -6,9 +6,12 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
 {
     private readonly ICache _cache;
     private readonly FullRedis _rds;
+    private readonly IServiceProvider _serviceProvider;
 
-    public CacheRateLimitStore(ICache cache, FullRedis fullRedis)
+    public CacheRateLimitStore(ICache cache, IServiceProvider serviceProvider)
     {
+        var fullRedis = _serviceProvider.GetService<FullRedis>();
+
         _rds = fullRedis;
         if (_rds != null)
         {

@@ -1,5 +1,7 @@
 ﻿using NewLife.Caching;
+using NewLife.Log;
 
+using Pek.Configs;
 using Pek.Infrastructure;
 
 namespace DH.RateLimter.Store;
@@ -7,16 +9,17 @@ namespace DH.RateLimter.Store;
 public class CacheRateLimitStore<T> : IRateLimitStore<T>
 {
     private readonly ICache _cache;
-    private readonly FullRedis _rds;
 
     public CacheRateLimitStore(ICache cache)
     {
-        var fullRedis = Singleton<FullRedis>.Instance;
-
-        _rds = fullRedis;
-        if (_rds != null)
+        if (RedisSetting.Current.RedisEnabled)
         {
-            _cache = _rds;
+            _cache = Singleton<FullRedis>.Instance;
+
+            if (_cache == null)
+            {
+                XTrace.WriteLine($"Redis缓存对象为空，请检查是否注入FullRedis");
+            }
         }
         else
         {

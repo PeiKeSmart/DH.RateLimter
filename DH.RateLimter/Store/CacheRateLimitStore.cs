@@ -6,7 +6,7 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
 {
     private readonly ICache _cache;
 
-    public CacheRateLimitStore(ICache cache, ICacheProvider cacheProvider)
+    public CacheRateLimitStore(ICacheProvider cacheProvider)
     {
         _cache = cacheProvider.Cache;
         //if (RedisSetting.Current.RedisEnabled)

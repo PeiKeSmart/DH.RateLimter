@@ -1,16 +1,17 @@
 ﻿using NewLife.Caching;
 
+using Pek.Infrastructure;
+
 namespace DH.RateLimter.Store;
 
 public class CacheRateLimitStore<T> : IRateLimitStore<T>
 {
     private readonly ICache _cache;
     private readonly FullRedis _rds;
-    private readonly IServiceProvider _serviceProvider;
 
-    public CacheRateLimitStore(ICache cache, IServiceProvider serviceProvider)
+    public CacheRateLimitStore(ICache cache)
     {
-        var fullRedis = _serviceProvider.GetService<FullRedis>();
+        var fullRedis = Singleton<FullRedis>.Instance;
 
         _rds = fullRedis;
         if (_rds != null)

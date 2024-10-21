@@ -42,13 +42,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DH.NRedis" Version="3.91.2024.1008-beta0919" />
+    <PackageReference Include="DH.NRedis" Version="3.91.2024.1021-beta0734" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.AspNetCore" Version="3.91.2024.1008-beta0736" />
-    <PackageReference Include="Pek.VirtualFileSystem" Version="3.91.2024.1008-beta0802" />
+    <PackageReference Include="Pek.AspNetCore" Version="3.91.2024.1021-beta0919" />
+    <PackageReference Include="Pek.VirtualFileSystem" Version="3.91.2024.1013-beta0921" />
   </ItemGroup>
 
   <ItemGroup>

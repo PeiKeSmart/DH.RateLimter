@@ -1,8 +1,7 @@
 ﻿using NewLife.Caching;
 using NewLife.Log;
-using Pek.Configs;
 
-using Pek.Infrastructure;
+using Pek.Configs;
 
 namespace DH.RateLimter.Store;
 
@@ -14,7 +13,7 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
     {
         if (RedisSetting.Current.RedisEnabled)
         {
-            _cache = Singleton<FullRedis>.Instance;
+            _cache = Pek.Webs.HttpContext.Current.RequestServices.GetRequiredService<FullRedis>();
 
             if (_cache == null)
             {

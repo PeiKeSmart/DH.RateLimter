@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <RootNamespace>DH.RateLimter</RootNamespace>
     <AssemblyName>DH.RateLimter</AssemblyName>
@@ -42,13 +42,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DH.NRedis" Version="3.91.2024.1021-beta0734" />
+    <PackageReference Include="DH.NRedis" Version="3.91.2024.1104-beta0356" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.AspNetCore" Version="3.91.2024.1028-beta0841" />
-    <PackageReference Include="Pek.VirtualFileSystem" Version="3.91.2024.1028-beta0848" />
+    <PackageReference Include="Pek.AspNetCore" Version="3.91.2024.1107-beta0135" />
+    <PackageReference Include="Pek.VirtualFileSystem" Version="3.91.2024.1101-beta0146" />
   </ItemGroup>
 
   <ItemGroup>

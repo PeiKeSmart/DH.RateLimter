@@ -47,7 +47,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.AspNetCore" Version="3.91.2024.1107-beta0135" />
+    <PackageReference Include="Pek.AspNetCore" Version="3.91.2024.1107-beta0753" />
     <PackageReference Include="Pek.VirtualFileSystem" Version="3.91.2024.1101-beta0146" />
   </ItemGroup>
 

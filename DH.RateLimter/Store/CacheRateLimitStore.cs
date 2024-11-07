@@ -9,7 +9,7 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
 {
     private readonly ICache _cache;
 
-    public CacheRateLimitStore(ICache cache)
+    public CacheRateLimitStore()
     {
         if (RedisSetting.Current.RedisEnabled)
         {
@@ -22,7 +22,7 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
         }
         else
         {
-            _cache = cache;
+            _cache = Pek.Webs.HttpContext.Current.RequestServices.GetRequiredService<ICacheProvider>().Cache;
         }
     }
 

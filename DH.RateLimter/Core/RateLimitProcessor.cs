@@ -31,7 +31,7 @@ public class RateLimitProcessor
         // 串行读写同一密钥
         using (await AsyncLock.WriterLockAsync(counterId).ConfigureAwait(false))
         {
-            RateLimitCounter? entry = await _counterStore.GetAsync(counterId, cancellationToken);
+            RateLimitCounter? entry = await _counterStore.GetAsync(counterId, cancellationToken).ConfigureAwait(false);
 
             if (valve is RateValve rateValve)
             {
@@ -52,7 +52,7 @@ public class RateLimitProcessor
                     }
                 }
                 // stores: id (string) - timestamp (datetime) - total_requests (long)
-                await _counterStore.SetAsync(counterId, counter, TimeSpan.FromSeconds(rateValve.Duration), cancellationToken);
+                await _counterStore.SetAsync(counterId, counter, TimeSpan.FromSeconds(rateValve.Duration), cancellationToken).ConfigureAwait(false);
             }
         }
 

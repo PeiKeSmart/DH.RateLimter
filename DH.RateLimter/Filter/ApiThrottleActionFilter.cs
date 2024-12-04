@@ -25,13 +25,13 @@ namespace DH.RateLimter.Filter
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            if (!RateLimterSetting.Current.AllowRateLimter) await next();
+            if (!RateLimterSetting.Current.AllowRateLimter) await next().ConfigureAwait(false);
             else
             {
-                var result = await HandleAsync(context);
+                var result = await HandleAsync(context).ConfigureAwait(false);
                 if (result.result)
                 {
-                    await next();
+                    await next().ConfigureAwait(false);
                 }
                 else
                 {
@@ -42,13 +42,13 @@ namespace DH.RateLimter.Filter
 
         public async Task OnPageHandlerExecutionAsync(PageHandlerExecutingContext context, PageHandlerExecutionDelegate next)
         {
-            if (!RateLimterSetting.Current.AllowRateLimter) await next();
+            if (!RateLimterSetting.Current.AllowRateLimter) await next().ConfigureAwait(false);
             else
             {
-                var result = await HandleAsync(context);
+                var result = await HandleAsync(context).ConfigureAwait(false);
                 if (result.result)
                 {
-                    await next();
+                    await next().ConfigureAwait(false);
                 }
                 else
                 {
@@ -59,7 +59,7 @@ namespace DH.RateLimter.Filter
 
         public async Task OnPageHandlerSelectionAsync(PageHandlerSelectedContext context)
         {
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace DH.RateLimter.Filter
             _valves = method.GetCustomAttributes<Valve>(true);
 
             //检查是否过载
-            var result = await CheckAsync(context);
+            var result = await CheckAsync(context).ConfigureAwait(false);
             if (result.result)
             {
                 context.HttpContext.Request.Headers[Common.HeaderStatusKey] = "1";
@@ -112,7 +112,7 @@ namespace DH.RateLimter.Filter
 
                     // increment counter
                     //判断是否过载
-                    var rateLimitCounter = await _processor.ProcessRequestAsync(_api, policyValue, valve, context.HttpContext.RequestAborted);
+                    var rateLimitCounter = await _processor.ProcessRequestAsync(_api, policyValue, valve, context.HttpContext.RequestAborted).ConfigureAwait(false);
 
                     //XTrace.WriteLine($"获取到的数据：{rateLimitCounter.Count}_{rateLimitCounter.Timestamp}");
 

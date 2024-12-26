@@ -10,7 +10,7 @@ namespace DH.RateLimter;
 /// <summary>
 /// 表示应用程序启动时配置限流的对象
 /// </summary>
-public class DHStartup : IDHStartup
+public class DHStartup : IPekStartup
 {
     /// <summary>
     /// 配置添加的中间件的使用
@@ -119,9 +119,17 @@ public class DHStartup : IDHStartup
     }
 
     /// <summary>
+    /// 处理数据
+    /// </summary>
+    public void ProcessData()
+    {
+
+    }
+
+    /// <summary>
     /// 获取此启动配置实现的顺序
     /// </summary>
-    public int StartupOrder => 200;
+    public Int32 StartupOrder => 200;
 
     /// <summary>
     /// 获取此启动配置实现的顺序。主要针对ConfigureMiddleware、UseRouting前执行的数据、UseAuthentication或者UseAuthorization后面 Endpoints前执行的数据

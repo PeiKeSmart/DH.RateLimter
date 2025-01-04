@@ -111,7 +111,7 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
                 //判断是否过载
                 var rateLimitCounter = await _processor.ProcessRequestAsync(_api, policyValue, valve, context.HttpContext.RequestAborted).ConfigureAwait(false);
 
-                //XTrace.WriteLine($"获取到的数据：{rateLimitCounter.Count}_{rateLimitCounter.Timestamp}");
+                //DTrace.WriteLine($"[ApiThrottleActionFilter.CheckAsync]获取到的数据：{rateLimitCounter.Count}_{rateLimitCounter.Timestamp}");
 
                 if (rateLimitCounter.Count > rateValve.Limit)
                 {

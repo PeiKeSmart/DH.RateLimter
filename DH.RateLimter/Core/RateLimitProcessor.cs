@@ -59,7 +59,7 @@ public class RateLimitProcessor
         return counter;
     }
 
-    protected virtual string BuildCounterKey(String api, Policy policy, String policyKey, String policyValue)
+    protected virtual String BuildCounterKey(String api, Policy policy, String policyKey, String policyValue)
     {
         var key = $"{RedisSetting.Current.CacheKeyPrefix}:record:{policy.ToString().ToLower()}";
         if (!policyKey.IsNullOrWhiteSpace())

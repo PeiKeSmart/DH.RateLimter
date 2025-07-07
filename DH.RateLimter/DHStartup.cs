@@ -34,6 +34,9 @@ public class DHStartup : IPekStartup
         {
             options.onIntercepted = (context, valve, where) =>
             {
+                // 设置 HTTP 状态码为 429 (Too Many Requests)
+                context.Response.StatusCode = 429;
+                
                 if (valve.ReturnType == ReturnType.Json_DGResult)
                 {
                     return new DGResult(StateCode.Busy, "访问过于频繁，请稍后重试！");

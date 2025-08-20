@@ -92,42 +92,31 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
     /// <returns></returns>
     private async Task<(Boolean result, Valve valve)> CheckAsync(FilterContext context)
     {
-        //循环验证是否过载
-        foreach (var valve in _valves.OrderByDescending(x => x.Priority))
+        // 优化：预先过滤有效的限流规则，避免运行时检查
+        var activeRateValves = _valves
+            .OfType<RateValve>()
+            .Where(v => v.Duration > 0 && v.Limit > 0)
+            .OrderByDescending(x => x.Priority);
+
+        foreach (var rateValve in activeRateValves)
         {
-            if (valve is RateValve rateValve)
+            // 取得识别值
+            var policyValue = context.HttpContext.GetPolicyValue(_options, rateValve.Policy, rateValve.PolicyKey);
+
+            // 优化的WhenNull处理：一次调用完成所有逻辑
+            var (shouldProcess, finalPolicyValue) = context.HttpContext.ProcessPolicyValueWithWhenNull(rateValve, policyValue);
+            if (!shouldProcess)
             {
-                //速率阀门
-                if (rateValve.Duration <= 0 || rateValve.Limit <= 0)
-                {
-                    //不限流
-                    continue;
-                }
-
-                //取得识别值
-                var policyValue = context.HttpContext.GetPolicyValue(_options, valve.Policy, valve.PolicyKey);
-
-                // 优化的WhenNull处理：一次调用完成所有逻辑
-                var (shouldProcess, finalPolicyValue) = context.HttpContext.ProcessPolicyValueWithWhenNull(valve, policyValue);
-                if (!shouldProcess)
-                {
-                    continue; // 根据WhenNull设置跳过此规则
-                }
-
-                // increment counter
-                //判断是否过载
-                var rateLimitCounter = await _processor.ProcessRequestAsync(_api, finalPolicyValue, valve, context.HttpContext.RequestAborted).ConfigureAwait(false);
-
-                //XTrace.WriteLine($"[ApiThrottleActionFilter.CheckAsync]获取到的数据：{rateLimitCounter.Count}_{rateLimitCounter.Timestamp}");
-
-                if (rateLimitCounter.Count > rateValve.Limit)
-                {
-                    return (false, valve);
-                }
+                continue; // 根据WhenNull设置跳过此规则
             }
 
-            // 注意：黑白名单功能（BlackListValve、WhiteListValve）暂未实现
-            // 如需黑白名单功能，建议在业务代码中自行实现或等待后续版本
+            // 限流检查
+            var rateLimitCounter = await _processor.ProcessRequestAsync(_api, finalPolicyValue, rateValve, context.HttpContext.RequestAborted).ConfigureAwait(false);
+
+            if (rateLimitCounter.Count > rateValve.Limit)
+            {
+                return (false, rateValve);
+            }
         }
 
         return (true, null);

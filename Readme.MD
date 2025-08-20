@@ -3,7 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/v/DH.RateLimter.svg)](https://www.nuget.org/packages/DH.RateLimter)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-DH.RateLimter 是一个功能强大的 ASP.NET Core 限流管理库，支持多种限流策略和算法，可以轻松实现 WebApi 接口的访问频率控制。
+DH.RateLimter 是一个功能强大的 ASP.NET Core 限流管理库，支持多种限流策略，可以轻松实现 WebApi 接口的访问频率控制。
 
 ## 🚀 特性
 
@@ -11,7 +11,7 @@ DH.RateLimter 是一个功能强大的 ASP.NET Core 限流管理库，支持多�
 - **多规则并用**：支持在同一个 API 上应用多个限流规则，按优先级顺序执行
 - **完善的空值处理**：支持 WhenNull 配置，灵活处理策略值为空的情况
 - **灵活的拦截方式**：支持全局拦截和单独 API 拦截
-- **多种算法支持**：令牌桶算法和漏桶算法
+- **高效的限流算法**：基于滑动时间窗口的计数器算法
 - **高性能**：基于异步锁和缓存存储，确保高并发场景下的性能
 - **易于集成**：简单的配置即可快速集成到现有项目中
 - **自定义返回格式**：支持多种返回数据格式

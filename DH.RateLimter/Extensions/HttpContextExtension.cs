@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Collections.Concurrent;
+using System.Security.Claims;
 
 using NewLife;
 
@@ -146,49 +147,41 @@ public static class HttpContextExtension
     }
 
     /// <summary>
-    /// 检查策略值是否为空并根据WhenNull设置处理
+    /// IP哈希缓存，避免重复计算MD5
+    /// </summary>
+    private static readonly ConcurrentDictionary<String, String> _ipHashCache = new();
+
+    /// <summary>
+    /// 处理策略值和WhenNull逻辑（优化版本）
     /// </summary>
     /// <param name="context">HTTP上下文</param>
     /// <param name="valve">阀门</param>
     /// <param name="policyValue">策略值</param>
-    /// <returns>是否应该继续处理（true=继续处理限流检查，false=跳过此规则）</returns>
-    internal static Boolean ShouldProcessWhenPolicyValueEmpty(this HttpContext context, Valve valve, String policyValue)
+    /// <returns>处理结果：(shouldProcess: 是否继续处理, finalPolicyValue: 最终策略值)</returns>
+    internal static (Boolean shouldProcess, String finalPolicyValue) ProcessPolicyValueWithWhenNull(
+        this HttpContext context, Valve valve, String policyValue)
     {
+        // 策略值不为空，直接返回
         if (!String.IsNullOrEmpty(policyValue))
         {
-            return true; // 策略值不为空，继续处理
+            return (true, policyValue);
         }
 
         // 策略值为空时的处理
         return valve.WhenNull switch
         {
-            WhenNull.Pass => false,      // 通过，不进行限流检查
-            WhenNull.Intercept => true,  // 拦截，进行限流检查
-            _ => false
+            WhenNull.Pass => (false, null),  // 跳过限流检查
+            WhenNull.Intercept => (true, GetCachedEmptyValueIdentifier(context)), // 继续检查，生成唯一标识
+            _ => (false, null)
         };
     }
 
     /// <summary>
-    /// 为空值策略生成唯一的策略值
+    /// 获取缓存的空值标识符（基于IP）
     /// </summary>
-    /// <param name="context">HTTP上下文</param>
-    /// <param name="valve">阀门</param>
-    /// <param name="originalPolicyValue">原始策略值</param>
-    /// <returns>处理后的策略值</returns>
-    internal static String GetProcessedPolicyValue(this HttpContext context, Valve valve, String originalPolicyValue)
+    private static String GetCachedEmptyValueIdentifier(HttpContext context)
     {
-        if (!String.IsNullOrEmpty(originalPolicyValue))
-        {
-            return originalPolicyValue; // 策略值不为空，直接返回
-        }
-
-        // 策略值为空且设置为Intercept时，生成基于IP的唯一标识
-        if (valve.WhenNull == WhenNull.Intercept)
-        {
-            var clientIp = context.Connection?.RemoteIpAddress?.ToString() ?? "unknown";
-            return $"empty_value_{Common.EncryptMD5Short(clientIp)}";
-        }
-
-        return originalPolicyValue; // 其他情况返回原值
+        var clientIp = context.Connection?.RemoteIpAddress?.ToString() ?? "unknown";
+        return _ipHashCache.GetOrAdd(clientIp, ip => $"empty_value_{Common.EncryptMD5Short(ip)}");
     }
 }

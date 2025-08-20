@@ -107,18 +107,16 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
                 //取得识别值
                 var policyValue = context.HttpContext.GetPolicyValue(_options, valve.Policy, valve.PolicyKey);
 
-                // 检查WhenNull处理逻辑
-                if (!context.HttpContext.ShouldProcessWhenPolicyValueEmpty(valve, policyValue))
+                // 优化的WhenNull处理：一次调用完成所有逻辑
+                var (shouldProcess, finalPolicyValue) = context.HttpContext.ProcessPolicyValueWithWhenNull(valve, policyValue);
+                if (!shouldProcess)
                 {
                     continue; // 根据WhenNull设置跳过此规则
                 }
 
-                // 处理空值策略值，确保生成唯一的缓存键
-                var processedPolicyValue = context.HttpContext.GetProcessedPolicyValue(valve, policyValue);
-
                 // increment counter
                 //判断是否过载
-                var rateLimitCounter = await _processor.ProcessRequestAsync(_api, processedPolicyValue, valve, context.HttpContext.RequestAborted).ConfigureAwait(false);
+                var rateLimitCounter = await _processor.ProcessRequestAsync(_api, finalPolicyValue, valve, context.HttpContext.RequestAborted).ConfigureAwait(false);
 
                 //XTrace.WriteLine($"[ApiThrottleActionFilter.CheckAsync]获取到的数据：{rateLimitCounter.Count}_{rateLimitCounter.Timestamp}");
 

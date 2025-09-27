@@ -55,26 +55,6 @@ namespace DH.RateLimter
 
     }
 
-    /// <summary>
-    /// 名册阀门
-    /// </summary>
-    public abstract class RosterValve : Valve
-    {
-    }
-
-    /// <summary>
-    /// 黑名单阀门
-    /// </summary>
-    public class BlackListValve : RosterValve
-    {
-
-    }
-
-    /// <summary>
-    /// 白名单阀门
-    /// </summary>
-    public class WhiteListValve : RosterValve
-    {
-
-    }
+    // 注意：黑白名单功能暂未实现
+    // 如需黑白名单功能，建议在业务代码中自行实现
 }

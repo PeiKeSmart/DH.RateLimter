@@ -16,61 +16,70 @@ public class RateLimitProcessor
     }
 
     /// 用于限制请求的键锁。
-    private static readonly AsyncKeyLock AsyncLock = new AsyncKeyLock();
+    private static readonly AsyncKeyLock AsyncLock = new();
 
     public virtual async Task<RateLimitCounter> ProcessRequestAsync(String api, String policyValue, Valve valve, CancellationToken cancellationToken = default)
     {
-        var counter = new RateLimitCounter
+        if (valve is not RateValve rateValve)
         {
-            Timestamp = DateTime.UtcNow,
-            Count = 1
-        };
-
-        var counterId = BuildCounterKey(api, valve.Policy, valve.PolicyKey, policyValue);
-
-        // 串行读写同一密钥
-        using (await AsyncLock.WriterLockAsync(counterId).ConfigureAwait(false))
-        {
-            RateLimitCounter? entry = await _counterStore.GetAsync(counterId, cancellationToken).ConfigureAwait(false);
-
-            if (valve is RateValve rateValve)
-            {
-                if (entry != null)
-                {
-                    // entry没有过期
-                    if (entry.Value.Timestamp.AddSeconds(rateValve.Duration) >= DateTime.UtcNow)
-                    {
-                        // increment request count
-                        var totalCount = entry.Value.Count + 1;
-
-                        // deep copy
-                        counter = new RateLimitCounter
-                        {
-                            Timestamp = entry.Value.Timestamp,
-                            Count = totalCount
-                        };
-                    }
-                }
-                // stores: id (string) - timestamp (datetime) - total_requests (long)
-                await _counterStore.SetAsync(counterId, counter, TimeSpan.FromSeconds(rateValve.Duration), cancellationToken).ConfigureAwait(false);
-            }
+            return new RateLimitCounter { Timestamp = DateTime.UtcNow, Count = 1 };
         }
 
-        return counter;
+        var counterId = BuildCounterKey(api, valve.Policy, valve.PolicyKey, policyValue);
+        var now = DateTime.UtcNow;
+
+        // 简化：使用锁保护，但减少缓存操作
+        using (await AsyncLock.WriterLockAsync(counterId).ConfigureAwait(false))
+        {
+            var entry = await _counterStore.GetAsync(counterId, cancellationToken).ConfigureAwait(false);
+
+            RateLimitCounter counter;
+
+            // 检查是否在时间窗口内（默认值的Timestamp是DateTime.MinValue）
+            if (entry.Timestamp != default && entry.Timestamp.AddSeconds(rateValve.Duration) >= now)
+            {
+                // 在时间窗口内，增加计数
+                counter = new RateLimitCounter
+                {
+                    Timestamp = entry.Timestamp,
+                    Count = entry.Count + 1
+                };
+            }
+            else
+            {
+                // 新的时间窗口或首次访问
+                counter = new RateLimitCounter
+                {
+                    Timestamp = now,
+                    Count = 1
+                };
+            }
+
+            // 存储更新后的计数器
+            await _counterStore.SetAsync(counterId, counter, TimeSpan.FromSeconds(rateValve.Duration), cancellationToken).ConfigureAwait(false);
+
+            return counter;
+        }
     }
 
     protected virtual String BuildCounterKey(String api, Policy policy, String policyKey, String policyValue)
     {
-        var key = $"{RedisSetting.Current.CacheKeyPrefix}:record:{policy.ToString().ToLower()}";
-        if (!policyKey.IsNullOrWhiteSpace())
+        // 简化：直接构建，避免过度缓存
+        var prefix = RedisSetting.Current.CacheKeyPrefix;
+        var policyStr = policy.ToString().ToLower();
+
+        // 使用简单的字符串插值，性能足够好
+        if (!policyKey.IsNullOrWhiteSpace() && !policyValue.IsNullOrWhiteSpace())
         {
-            key += ":" + Common.EncryptMD5Short(policyKey);
+            return $"{prefix}:rl:{policyStr}:{Common.EncryptMD5Short(policyKey)}:{Common.EncryptMD5Short(policyValue)}:{api.ToLower()}";
         }
-        if (!policyValue.IsNullOrWhiteSpace())
+        else if (!policyValue.IsNullOrWhiteSpace())
         {
-            key += ":" + Common.EncryptMD5Short(policyValue);
+            return $"{prefix}:rl:{policyStr}:{Common.EncryptMD5Short(policyValue)}:{api.ToLower()}";
         }
-        key += ":" + api.ToLower();
-        return key;
+        else
+        {
+            return $"{prefix}:rl:{policyStr}:{api.ToLower()}";
+        }
     }
 }

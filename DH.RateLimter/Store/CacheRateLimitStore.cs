@@ -13,7 +13,7 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
 
     public Task<bool> ExistsAsync(string id, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(_cache.ContainsKey("id"));
+        return Task.FromResult(_cache.ContainsKey(id));
     }
 
     public Task<T> GetAsync(string id, CancellationToken cancellationToken = default)

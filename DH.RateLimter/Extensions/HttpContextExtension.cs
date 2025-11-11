@@ -2,6 +2,7 @@
 using System.Security.Claims;
 
 using NewLife;
+using Pek.Helpers;
 
 namespace DH.RateLimter.Extensions;
 
@@ -12,25 +13,8 @@ public static class HttpContextExtension
     /// </summary>
     internal static String GetIpAddress(this HttpContext context)
     {
-        var request = context.Request;
-
-        var str = "";
-        if (str.IsNullOrEmpty()) str = request.Headers["HTTP_X_FORWARDED_FOR"];
-        if (str.IsNullOrEmpty()) str = request.Headers["X-Real-IP"];
-        if (str.IsNullOrEmpty()) str = request.Headers["X-Forwarded-For"];
-        if (str.IsNullOrEmpty()) str = request.Headers["REMOTE_ADDR"];
-        //if (str.IsNullOrEmpty()) str = request.Headers["Host"];
-        if (str.IsNullOrEmpty())
-        {
-            var addr = context.Connection?.RemoteIpAddress;
-            if (addr != null)
-            {
-                if (addr.IsIPv4MappedToIPv6) addr = addr.MapToIPv4();
-                str = addr + "";
-            }
-        }
-
-        return str;
+        // 使用规范的DHWeb.GetUserHost API
+        return DHWeb.GetUserHost(context);
     }
 
     /// <summary>
@@ -181,7 +165,8 @@ public static class HttpContextExtension
     /// </summary>
     private static String GetCachedEmptyValueIdentifier(HttpContext context)
     {
-        var clientIp = context.Connection?.RemoteIpAddress?.ToString() ?? "unknown";
+        // 使用统一的IP获取方法，处理代理转发等场景
+        var clientIp = context.GetIpAddress() ?? "unknown";
         return _ipHashCache.GetOrAdd(clientIp, ip => $"empty_value_{Common.EncryptMD5Short(ip)}");
     }
 }

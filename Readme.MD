@@ -354,7 +354,8 @@ public IActionResult Purchase([FromForm] string user_id, [FromForm] decimal amou
 [RateValve(Policy = Policy.Ip, Limit = 100, Duration = 3600)]
 public IActionResult GetSensitiveData()
 {
-    var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+    // 使用规范的DHWeb.GetUserHost获取客户端真实IP
+    var clientIp = DHWeb.GetUserHost(HttpContext);
 
     // 自定义黑名单检查
     if (IsInBlackList(clientIp))

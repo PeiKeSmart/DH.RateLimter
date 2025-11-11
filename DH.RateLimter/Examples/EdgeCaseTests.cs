@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 
+using Pek.Helpers;
+
 namespace DH.RateLimter.Examples;
 
 /// <summary>
@@ -16,7 +18,7 @@ public class EdgeCaseTestsController : ControllerBase
     [RateValve(Policy = Policy.Ip, Limit = 10, Duration = 60, WhenNull = WhenNull.Intercept)]
     public IActionResult TestInvalidIp()
     {
-        return Ok(new { message = "IP处理测试", ip = HttpContext.Connection.RemoteIpAddress?.ToString() });
+        return Ok(new { message = "IP处理测试", ip = DHWeb.GetUserHost(HttpContext) });
     }
 
     /// <summary>
@@ -107,7 +109,7 @@ public class EdgeCaseTestsController : ControllerBase
     {
         var auth = Request.Headers["Authorization"].FirstOrDefault();
         var userId = User?.Identity?.Name;
-        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var ip = DHWeb.GetUserHost(HttpContext);
 
         return Ok(new { 
             message = "多重空值测试",
@@ -154,7 +156,7 @@ public class EdgeCaseTestsController : ControllerBase
     public IActionResult TestCacheKeyUniqueness()
     {
         var cookieValue = Request.Cookies["unique_test"];
-        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var clientIp = DHWeb.GetUserHost(HttpContext);
         
         return Ok(new { 
             message = "缓存键唯一性测试",

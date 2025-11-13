@@ -8,7 +8,7 @@
     <Description>使用DH.RateLimter可以使您轻松实现WebApi接口的限流管理。DH.RateLimter支持IP、用户身份、Request Header、Request QueryString等多种限流策略，支持黑名单和白名单功能，支持全局拦截和单独Api拦截。令牌桶算法和漏桶算法参考https://github.com/duyanming/AnnoDemo，其他限制参考https://github.com/kulend/Dnc.Api.Throttle</Description>
     <Company>湖北登灏科技有限公司</Company>
     <Copyright>©2020-2025 湖北登灏科技有限公司</Copyright>
-    <VersionPrefix>4.14</VersionPrefix>
+    <VersionPrefix>4.16</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -48,8 +48,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.AspNetCore" Version="4.14.2025.1111-beta0804" />
-    <PackageReference Include="Pek.VirtualFileSystem" Version="4.14.2025.1029-beta1416" />
+    <PackageReference Include="Pek.AspNetCore" Version="4.16.2025.1113" />
+    <PackageReference Include="Pek.VirtualFileSystem" Version="4.16.2025.1113" />
   </ItemGroup>
 
   <ItemGroup>

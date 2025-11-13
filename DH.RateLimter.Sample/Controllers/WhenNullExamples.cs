@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace DH.RateLimter.Examples;
+namespace DH.RateLimter.Sample.Controllers;
 
 /// <summary>
 /// WhenNull 功能使用示例

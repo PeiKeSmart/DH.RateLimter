@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using Pek.Helpers;
 
-namespace DH.RateLimter.Examples;
+namespace DH.RateLimter.Sample.Controllers;
 
 /// <summary>
 /// 边界情况和异常处理测试示例

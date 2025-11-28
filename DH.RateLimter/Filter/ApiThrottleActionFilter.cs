@@ -4,6 +4,8 @@ using DH.RateLimter.Extensions;
 
 using Microsoft.AspNetCore.Mvc.Filters;
 
+using NewLife.Log;
+
 using Pek.Configs;
 
 namespace DH.RateLimter.Filter;
@@ -115,6 +117,7 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
 
             if (rateLimitCounter.Count > rateValve.Limit)
             {
+                XTrace.WriteLine($"[RateLimiter] 触发限流! API={_api}, Policy={rateValve.Policy}, PolicyValue={finalPolicyValue}, Count={rateLimitCounter.Count}, Limit={rateValve.Limit}, Duration={rateValve.Duration}s");
                 return (false, rateValve);
             }
         }

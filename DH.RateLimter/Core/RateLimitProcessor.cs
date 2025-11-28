@@ -60,10 +60,7 @@ public class RateLimitProcessor
             await _counterStore.SetAsync(counterId, counter, TimeSpan.FromSeconds(rateValve.Duration), cancellationToken).ConfigureAwait(false);
 
             // 调试日志：帮助排查限流计数问题
-            if (counter.Count == 1 || counter.Count == rateValve.Limit || counter.Count > rateValve.Limit)
-            {
-                XTrace.WriteLine($"[RateLimiter] Key={counterId}, Count={counter.Count}/{rateValve.Limit}, WindowStart={counter.Timestamp:HH:mm:ss}, Now={now:HH:mm:ss}");
-            }
+            XTrace.WriteLine($"[RateLimiter] Key={counterId}, Count={counter.Count}/{rateValve.Limit}, Duration={rateValve.Duration}s, WindowStart={counter.Timestamp:HH:mm:ss.fff}, Now={now:HH:mm:ss.fff}, PrevCount={entry.Count}, PrevTs={entry.Timestamp:HH:mm:ss.fff}");
 
             return counter;
         }

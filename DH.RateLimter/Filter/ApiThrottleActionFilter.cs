@@ -113,16 +113,6 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
             {
                 continue; // 根据WhenNull设置跳过此规则
             }
-
-            // 限流检查
-            var rateLimitCounter = await _processor.ProcessRequestAsync(_api, finalPolicyValue, rawIp, rateValve, context.HttpContext.RequestAborted).ConfigureAwait(false);
-
-            if (rateLimitCounter.Count > rateValve.Limit)
-            {
-                var ipInfo = rawIp != null ? $", IP={rawIp}" : "";
-                XTrace.WriteLine($"[RateLimiter] 触发限流! API={_api}, Policy={rateValve.Policy}{ipInfo}, Count={rateLimitCounter.Count}, Limit={rateValve.Limit}, Duration={rateValve.Duration}s");
-                return (false, rateValve);
-            }
         }
 
         return (true, null);

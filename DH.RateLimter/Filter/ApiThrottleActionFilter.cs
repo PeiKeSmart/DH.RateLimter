@@ -102,10 +102,8 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
 
         foreach (var rateValve in activeRateValves)
         {
-            // 取得识别值（原始值，用于日志）
+            // 取得识别值
             var policyValue = context.HttpContext.GetPolicyValue(_options, rateValve.Policy, rateValve.PolicyKey);
-            // 保留原始IP用于日志（仅IP策略时）
-            var rawIp = rateValve.Policy == Policy.Ip ? _options.OnIpAddress(context.HttpContext) : null;
 
             // 优化的WhenNull处理：一次调用完成所有逻辑
             var (shouldProcess, finalPolicyValue) = context.HttpContext.ProcessPolicyValueWithWhenNull(rateValve, policyValue);
@@ -115,12 +113,11 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
             }
 
             // 限流检查
-            var rateLimitCounter = await _processor.ProcessRequestAsync(_api, finalPolicyValue, rawIp, rateValve, context.HttpContext.RequestAborted).ConfigureAwait(false);
+            var rateLimitCounter = await _processor.ProcessRequestAsync(_api, finalPolicyValue, rateValve, context.HttpContext.RequestAborted).ConfigureAwait(false);
 
             if (rateLimitCounter.Count > rateValve.Limit)
             {
-                var ipInfo = rawIp != null ? $", IP={rawIp}" : "";
-                XTrace.WriteLine($"[RateLimiter] 触发限流! API={_api}, Policy={rateValve.Policy}{ipInfo}, Count={rateLimitCounter.Count}, Limit={rateValve.Limit}, Duration={rateValve.Duration}s");
+                XTrace.WriteLine($"[RateLimiter] 触发限流! API={_api}, Policy={rateValve.Policy}, PolicyValue={finalPolicyValue}, Count={rateLimitCounter.Count}, Limit={rateValve.Limit}, Duration={rateValve.Duration}s");
                 return (false, rateValve);
             }
         }

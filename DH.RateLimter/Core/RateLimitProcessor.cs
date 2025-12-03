@@ -21,11 +21,6 @@ public class RateLimitProcessor
 
     public virtual async Task<RateLimitCounter> ProcessRequestAsync(String api, String policyValue, Valve valve, CancellationToken cancellationToken = default)
     {
-        return await ProcessRequestAsync(api, policyValue, null, valve, cancellationToken).ConfigureAwait(false);
-    }
-
-    public virtual async Task<RateLimitCounter> ProcessRequestAsync(String api, String policyValue, String rawIdentifier, Valve valve, CancellationToken cancellationToken = default)
-    {
         if (valve is not RateValve rateValve)
         {
             return new RateLimitCounter { Timestamp = DateTime.UtcNow, Count = 1 };
@@ -65,8 +60,7 @@ public class RateLimitProcessor
             await _counterStore.SetAsync(counterId, counter, TimeSpan.FromSeconds(rateValve.Duration), cancellationToken).ConfigureAwait(false);
 
             // 调试日志：帮助排查限流计数问题
-            var idInfo = rawIdentifier != null ? $", Raw={rawIdentifier}" : "";
-            XTrace.WriteLine($"[RateLimiter] API={api}, Count={counter.Count}/{rateValve.Limit}, Duration={rateValve.Duration}s{idInfo}, PrevCount={entry.Count}");
+            XTrace.WriteLine($"[RateLimiter] Key={counterId}, Count={counter.Count}/{rateValve.Limit}, Duration={rateValve.Duration}s, WindowStart={counter.Timestamp:HH:mm:ss.fff}, Now={now:HH:mm:ss.fff}, PrevCount={entry.Count}, PrevTs={entry.Timestamp:HH:mm:ss.fff}");
 
             return counter;
         }

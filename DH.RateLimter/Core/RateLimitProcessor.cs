@@ -1,7 +1,6 @@
 ﻿using DH.RateLimter.Store;
 
 using NewLife;
-using NewLife.Log;
 
 using Pek.Configs;
 
@@ -63,10 +62,6 @@ public class RateLimitProcessor
 
             // 存储更新后的计数器
             await _counterStore.SetAsync(counterId, counter, TimeSpan.FromSeconds(rateValve.Duration), cancellationToken).ConfigureAwait(false);
-
-            // 调试日志：帮助排查限流计数问题
-            var idInfo = rawIdentifier != null ? $", Raw={rawIdentifier}" : "";
-            XTrace.WriteLine($"[RateLimiter] API={api}, Count={counter.Count}/{rateValve.Limit}, Duration={rateValve.Duration}s{idInfo}, PrevCount={entry.Count}");
 
             return counter;
         }

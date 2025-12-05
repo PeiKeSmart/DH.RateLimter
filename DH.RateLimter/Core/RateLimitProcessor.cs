@@ -39,9 +39,13 @@ public class RateLimitProcessor
             var entry = await _counterStore.GetAsync(counterId, cancellationToken).ConfigureAwait(false);
 
             RateLimitCounter counter;
+            TimeSpan expirationTime;
+
+            // 计算时间窗口结束时间
+            var windowEnd = entry.Timestamp.AddSeconds(rateValve.Duration);
 
             // 检查是否在时间窗口内（默认值的Timestamp是DateTime.MinValue）
-            if (entry.Timestamp != default && entry.Timestamp.AddSeconds(rateValve.Duration) >= now)
+            if (entry.Timestamp != default && windowEnd >= now)
             {
                 // 在时间窗口内，增加计数
                 counter = new RateLimitCounter
@@ -49,6 +53,8 @@ public class RateLimitProcessor
                     Timestamp = entry.Timestamp,
                     Count = entry.Count + 1
                 };
+                // 使用剩余窗口时间作为过期时间，确保窗口结束时计数器自动清零
+                expirationTime = windowEnd - now;
             }
             else
             {
@@ -58,10 +64,12 @@ public class RateLimitProcessor
                     Timestamp = now,
                     Count = 1
                 };
+                // 新窗口使用完整的 Duration
+                expirationTime = TimeSpan.FromSeconds(rateValve.Duration);
             }
 
-            // 存储更新后的计数器
-            await _counterStore.SetAsync(counterId, counter, TimeSpan.FromSeconds(rateValve.Duration), cancellationToken).ConfigureAwait(false);
+            // 存储更新后的计数器，过期时间为窗口剩余时间
+            await _counterStore.SetAsync(counterId, counter, expirationTime, cancellationToken).ConfigureAwait(false);
 
             return counter;
         }

@@ -15,9 +15,6 @@ public class RateLimitProcessor
         _counterStore = counterStore;
     }
 
-    /// 用于限制请求的键锁。
-    private static readonly AsyncKeyLock AsyncLock = new();
-
     public virtual async Task<RateLimitCounter> ProcessRequestAsync(String api, String policyValue, Valve valve, CancellationToken cancellationToken = default)
     {
         return await ProcessRequestAsync(api, policyValue, null, valve, cancellationToken).ConfigureAwait(false);
@@ -31,48 +28,19 @@ public class RateLimitProcessor
         }
 
         var counterId = BuildCounterKey(api, valve.Policy, valve.PolicyKey, policyValue);
-        var now = DateTime.UtcNow;
+        var duration = TimeSpan.FromSeconds(rateValve.Duration);
 
-        // 简化：使用锁保护，但减少缓存操作
-        using (await AsyncLock.WriterLockAsync(counterId).ConfigureAwait(false))
+        // 使用原子递增操作，仅在键首次创建时设置过期时间
+        // 这确保了：
+        // 1. 计数器在 Duration 时间后自动过期清零
+        // 2. 后续请求不会刷新过期时间
+        var count = await _counterStore.IncrementAsync(counterId, duration, cancellationToken).ConfigureAwait(false);
+
+        return new RateLimitCounter
         {
-            var entry = await _counterStore.GetAsync(counterId, cancellationToken).ConfigureAwait(false);
-
-            RateLimitCounter counter;
-            TimeSpan expirationTime;
-
-            // 计算时间窗口结束时间
-            var windowEnd = entry.Timestamp.AddSeconds(rateValve.Duration);
-
-            // 检查是否在时间窗口内（默认值的Timestamp是DateTime.MinValue）
-            if (entry.Timestamp != default && windowEnd >= now)
-            {
-                // 在时间窗口内，增加计数
-                counter = new RateLimitCounter
-                {
-                    Timestamp = entry.Timestamp,
-                    Count = entry.Count + 1
-                };
-                // 使用剩余窗口时间作为过期时间，确保窗口结束时计数器自动清零
-                expirationTime = windowEnd - now;
-            }
-            else
-            {
-                // 新的时间窗口或首次访问
-                counter = new RateLimitCounter
-                {
-                    Timestamp = now,
-                    Count = 1
-                };
-                // 新窗口使用完整的 Duration
-                expirationTime = TimeSpan.FromSeconds(rateValve.Duration);
-            }
-
-            // 存储更新后的计数器，过期时间为窗口剩余时间
-            await _counterStore.SetAsync(counterId, counter, expirationTime, cancellationToken).ConfigureAwait(false);
-
-            return counter;
-        }
+            Timestamp = DateTime.UtcNow,
+            Count = count
+        };
     }
 
     protected virtual String BuildCounterKey(String api, Policy policy, String policyKey, String policyValue)

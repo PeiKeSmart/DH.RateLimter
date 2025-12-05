@@ -41,4 +41,18 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
+    public Task<Int64> IncrementAsync(String id, TimeSpan expirationTime, CancellationToken cancellationToken = default)
+    {
+        var cacheTime = (Int32)expirationTime.TotalSeconds;
+
+        // 先尝试添加（仅当键不存在时成功），设置初始值为 0 和过期时间
+        _cache.Add(id, 0L, cacheTime);
+
+        // 原子递增，返回递增后的值
+        // 如果是新键，过期时间已由 Add 设置；已存在的键，Increment 不会修改过期时间
+        var count = _cache.Increment(id, 1);
+
+        return Task.FromResult(count);
+    }
 }

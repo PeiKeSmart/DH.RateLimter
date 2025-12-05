@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Concurrent;
+using System.Reflection;
 
 using DH.RateLimter.Extensions;
 
@@ -15,9 +16,12 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
     private readonly RateLimitProcessor _processor;
     private readonly RateLimterOptions _options;
 
-    //Api名称
+    /// <summary>方法元数据缓存：MethodInfo -> (API名称, 有效的限流阀门数组)</summary>
+    private static readonly ConcurrentDictionary<MethodInfo, (String Api, RateValve[] Valves)> _methodCache = new();
+
+    // Api名称
     private String _api = null;
-    private IEnumerable<Valve> _valves;
+    private RateValve[] _valves;
 
     public ApiThrottleActionFilter(RateLimitProcessor processor, RateLimterOptions options)
     {
@@ -61,20 +65,28 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
 
     public async Task OnPageHandlerSelectionAsync(PageHandlerSelectedContext context) => await Task.CompletedTask.ConfigureAwait(false);
 
-    /// <summary>
-    /// 处理接口
-    /// </summary>
-    /// <returns></returns>
+    /// <summary>处理接口</summary>
     private async Task<(Boolean result, Valve valve)> HandleAsync(FilterContext context)
     {
-        //预处理数据
+        // 预处理数据
         var method = context.GetHandlerMethod();
 
-        _api = method.DeclaringType.FullName + "." + method.Name;
+        // 从缓存获取或计算 API 名称和有效阀门列表
+        var (api, valves) = _methodCache.GetOrAdd(method, m =>
+        {
+            var apiName = (m.DeclaringType.FullName + "." + m.Name).ToLower();
+            var rateValves = m.GetCustomAttributes<Valve>(true)
+                .OfType<RateValve>()
+                .Where(v => v.Duration > 0 && v.Limit > 0)
+                .OrderByDescending(x => x.Priority)
+                .ToArray();
+            return (apiName, rateValves);
+        });
 
-        _valves = method.GetCustomAttributes<Valve>(true);
+        _api = api;
+        _valves = valves;
 
-        //检查是否过载
+        // 检查是否过载
         var result = await CheckAsync(context).ConfigureAwait(false);
         if (result.result)
         {
@@ -88,19 +100,11 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
         return result;
     }
 
-    /// <summary>
-    /// 检查过载
-    /// </summary>
-    /// <returns></returns>
+    /// <summary>检查过载</summary>
     private async Task<(Boolean result, Valve valve)> CheckAsync(FilterContext context)
     {
-        // 优化：预先过滤有效的限流规则，避免运行时检查
-        var activeRateValves = _valves
-            .OfType<RateValve>()
-            .Where(v => v.Duration > 0 && v.Limit > 0)
-            .OrderByDescending(x => x.Priority);
-
-        foreach (var rateValve in activeRateValves)
+        // _valves 已在 HandleAsync 中预过滤和排序，直接遍历
+        foreach (var rateValve in _valves)
         {
             // 取得识别值（原始值，用于日志）
             var policyValue = context.HttpContext.GetPolicyValue(_options, rateValve.Policy, rateValve.PolicyKey);

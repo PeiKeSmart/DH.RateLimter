@@ -47,13 +47,10 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
         // 先递增，Redis INCR 在键不存在时会创建键（值为1）
         var count = _cache.Increment(id, 1);
 
-        // 检查 TTL：仅当键没有过期时间时才设置
-        // GetExpire 返回值：
-        //   > 0：剩余过期时间
-        //   = 0：永不过期（需要修复）
-        //   < 0：键不存在（理论上不会，因为刚 INCR 过）
-        var ttl = _cache.GetExpire(id);
-        if (ttl.TotalSeconds <= 0)
+        // 前3次请求都尝试设置过期时间，确保可靠性
+        // 即使第1次因部署重启等原因失败，还有第2、3次兜底
+        // 第4次及之后不再设置，避免每次都多一次往返
+        if (count <= 3)
         {
             _cache.SetExpire(id, expirationTime);
         }

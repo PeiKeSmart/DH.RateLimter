@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
+using NewLife.Log;
 using Pek.Helpers;
 using Pek.Infrastructure;
 using Pek.Models;
@@ -29,6 +29,7 @@ public class DHStartup : IPekStartup
     /// <param name="webHostEnvironment">应用程序的环境</param>
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
     {
+        XTrace.WriteLine("配置限流服务...");
         // 限流
         services.AddRateLimter(options =>
         {
@@ -43,7 +44,7 @@ public class DHStartup : IPekStartup
                 }
                 else if (valve.ReturnType == ReturnType.Json_DResult)
                 {
-                    return new JsonResult(new DResult { code = 99, msg = "访问过于频繁，请稍后重试！" });
+                    return new JsonResult(new DResult { code = (Int32)StateCode.Busy, msg = "访问过于频繁，请稍后重试！" });
                 }
                 else
                 {

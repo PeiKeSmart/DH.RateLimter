@@ -121,6 +121,8 @@ public class ApiThrottleActionFilter : IAsyncActionFilter, IAsyncPageFilter
             // 限流检查
             var rateLimitCounter = await _processor.ProcessRequestAsync(_api, finalPolicyValue, rawIp, rateValve, context.HttpContext.RequestAborted).ConfigureAwait(false);
 
+            XTrace.WriteLine($"[RateLimiter] 检查: API={_api}, Policy={rateValve.Policy}, Count={rateLimitCounter.Count}, Limit={rateValve.Limit}, 将触发={(rateLimitCounter.Count > rateValve.Limit)}");
+
             if (rateLimitCounter.Count > rateValve.Limit)
             {
                 var ipInfo = rawIp != null ? $", IP={rawIp}" : "";

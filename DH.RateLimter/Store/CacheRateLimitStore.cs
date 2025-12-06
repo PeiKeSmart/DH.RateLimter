@@ -44,14 +44,15 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
     /// <inheritdoc/>
     public Task<Int64> IncrementAsync(String id, TimeSpan expirationTime, CancellationToken cancellationToken = default)
     {
-        var cacheTime = (Int32)expirationTime.TotalSeconds;
-
-        // 先尝试添加（仅当键不存在时成功），设置初始值为 0 和过期时间
-        _cache.Add(id, 0L, cacheTime);
-
-        // 原子递增，返回递增后的值
-        // 如果是新键，过期时间已由 Add 设置；已存在的键，Increment 不会修改过期时间
+        // 先递增，Redis INCR 在键不存在时会创建键（值为1）
         var count = _cache.Increment(id, 1);
+
+        // 仅首次创建时设置过期时间
+        // count == 1 表示这是新键的第一个请求，需要设置过期时间
+        if (count == 1)
+        {
+            _cache.SetExpire(id, expirationTime);
+        }
 
         return Task.FromResult(count);
     }

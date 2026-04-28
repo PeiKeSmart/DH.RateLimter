@@ -48,8 +48,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pek.AspNetCore" Version="4.22.2026.415-beta0907" />
-    <PackageReference Include="Pek.VirtualFileSystem" Version="4.22.2026.415-beta0911" />
+    <PackageReference Include="Pek.AspNetCore" Version="4.22.2026.416-beta1026" />
+    <PackageReference Include="Pek.VirtualFileSystem" Version="4.22.2026.416-beta1244" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,7 +8,7 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
 
     public CacheRateLimitStore()
     {
-        _cache = Pek.Webs.HttpContext.Current.RequestServices.GetRequiredService<ICacheProvider>().Cache;
+        _cache = Pek.Webs.HttpContext.Current.RequestServices.GetRequiredService<ICacheProvider>().InnerCache;
     }
 
     public Task<bool> ExistsAsync(string id, CancellationToken cancellationToken = default)

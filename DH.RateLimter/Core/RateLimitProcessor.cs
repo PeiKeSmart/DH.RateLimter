@@ -43,24 +43,44 @@ public class RateLimitProcessor
         };
     }
 
+    internal virtual async Task<RateLimitCounter> ProcessRequestAsync(String apiLower, String policyValue, String rawIdentifier, RateValve rateValve, String policyStr, String policyKeyHash, CancellationToken cancellationToken = default)
+    {
+        var counterId = BuildCounterKey(apiLower, policyStr, policyKeyHash, policyValue);
+        var duration = TimeSpan.FromSeconds(rateValve.Duration);
+
+        var count = await _counterStore.IncrementAsync(counterId, duration, cancellationToken).ConfigureAwait(false);
+
+        return new RateLimitCounter
+        {
+            Timestamp = DateTime.UtcNow,
+            Count = count
+        };
+    }
+
     protected virtual String BuildCounterKey(String api, Policy policy, String policyKey, String policyValue)
     {
-        // 简化：直接构建，避免过度缓存
-        var prefix = RedisSetting.Current.CacheKeyPrefix;
-        var policyStr = policy.ToString().ToLower();
+        return BuildCounterKey(
+            api.ToLower(),
+            policy.ToString().ToLower(),
+            policyKey.IsNullOrWhiteSpace() ? null : Common.EncryptMD5Short(policyKey),
+            policyValue);
+    }
 
-        // 使用简单的字符串插值，性能足够好
-        if (!policyKey.IsNullOrWhiteSpace() && !policyValue.IsNullOrWhiteSpace())
+    private static String BuildCounterKey(String apiLower, String policyStr, String policyKeyHash, String policyValue)
+    {
+        var prefix = RedisSetting.Current.CacheKeyPrefix;
+
+        if (!policyKeyHash.IsNullOrWhiteSpace() && !policyValue.IsNullOrWhiteSpace())
         {
-            return $"{prefix}:rl:{policyStr}:{Common.EncryptMD5Short(policyKey)}:{Common.EncryptMD5Short(policyValue)}:{api.ToLower()}";
+            return $"{prefix}:rl:{policyStr}:{policyKeyHash}:{Common.EncryptMD5Short(policyValue)}:{apiLower}";
         }
         else if (!policyValue.IsNullOrWhiteSpace())
         {
-            return $"{prefix}:rl:{policyStr}:{Common.EncryptMD5Short(policyValue)}:{api.ToLower()}";
+            return $"{prefix}:rl:{policyStr}:{Common.EncryptMD5Short(policyValue)}:{apiLower}";
         }
         else
         {
-            return $"{prefix}:rl:{policyStr}:{api.ToLower()}";
+            return $"{prefix}:rl:{policyStr}:{apiLower}";
         }
     }
 }

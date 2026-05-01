@@ -48,13 +48,15 @@
     public enum WhenNull : short
     {
         /// <summary>
-        /// 通过
+        /// 跳过当前规则
         /// </summary>
+        /// <remarks>仅当前规则不参与限流，不代表整个请求直接通过；同一方法上的其他规则仍会继续执行。</remarks>
         Pass = 0,
 
         /// <summary>
-        /// 拦截
+        /// 使用空值标识继续限流
         /// </summary>
+        /// <remarks>当前规则会继续执行，并使用基于请求特征生成的空值标识参与限流。</remarks>
         Intercept = 1
     }
 

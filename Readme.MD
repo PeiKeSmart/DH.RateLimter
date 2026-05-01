@@ -117,6 +117,14 @@ public class TestController : ControllerBase
         return Ok("Success");
     }
 
+    // 如果 Cookie 缺失时仍要进入匿名桶限流，需要显式设置 WhenNull = WhenNull.Intercept
+    [HttpGet("cookie-limit-strict")]
+    [RateValve(Policy = Policy.Cookie, PolicyKey = "session_id", WhenNull = WhenNull.Intercept, Limit = 30, Duration = 60)]
+    public IActionResult GetWithStrictCookieLimit()
+    {
+        return Ok("Success");
+    }
+
     // 基于表单数据的限流
     [HttpPost("form-limit")]
     [RateValve(Policy = Policy.Form, PolicyKey = "user_id", Limit = 10, Duration = 300)]
@@ -190,6 +198,13 @@ public IActionResult GetSensitiveData()
 }
 ```
 
+### WhenNull 语义
+
+- 默认值是 WhenNull.Pass。
+- WhenNull.Pass 只会跳过当前这条限流规则，不会直接放行整个请求；同一方法上的其他规则仍会继续执行。
+- WhenNull.Intercept 会为当前请求生成空值标识并继续参与限流，适合 Cookie、Header、Query、Form 等识别值缺失时仍需要限流兜底的场景。
+- 对 Cookie、Header、Query、Form 这类依赖外部输入的策略，如果业务要求“缺失时也要被限流”，请显式写出 WhenNull = WhenNull.Intercept，避免因默认值漏配而退化成只剩其他规则生效。
+
 ### 最佳实践
 
 1. **合理设置优先级**：
@@ -204,6 +219,11 @@ public IActionResult GetSensitiveData()
 3. **性能考虑**：
    - 将最可能触发的规则设置为高优先级
    - 避免设置过多规则（建议不超过 5 个）
+
+4. **显式声明缺失值策略**：
+    - Cookie、Header、Query、Form 建议总是显式写出 WhenNull
+    - 需要匿名桶兜底时使用 WhenNull.Intercept
+    - 只想在识别值存在时才启用该规则时使用 WhenNull.Pass
 
 ## �📋 限流策略详解
 

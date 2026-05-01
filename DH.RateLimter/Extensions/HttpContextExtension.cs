@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 using NewLife;
 using Pek.Helpers;
@@ -131,11 +130,6 @@ public static class HttpContextExtension
     }
 
     /// <summary>
-    /// IP哈希缓存，避免重复计算MD5
-    /// </summary>
-    private static readonly ConcurrentDictionary<String, String> _ipHashCache = new();
-
-    /// <summary>
     /// 处理策略值和WhenNull逻辑（优化版本）
     /// </summary>
     /// <param name="context">HTTP上下文</param>
@@ -167,6 +161,6 @@ public static class HttpContextExtension
     {
         // 使用统一的IP获取方法，处理代理转发等场景
         var clientIp = context.GetIpAddress() ?? "unknown";
-        return _ipHashCache.GetOrAdd(clientIp, ip => $"empty_value_{Common.EncryptMD5Short(ip)}");
+        return $"empty_value_{Common.EncryptMD5Short(clientIp)}";
     }
 }

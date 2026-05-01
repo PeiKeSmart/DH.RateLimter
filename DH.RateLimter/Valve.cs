@@ -25,6 +25,11 @@ namespace DH.RateLimter
         /// <summary>
         /// 当识别值为空时处理方式
         /// </summary>
+        /// <remarks>
+        /// 默认值为 WhenNull.Pass。
+        /// WhenNull.Pass 只会跳过当前这条限流规则，不会直接放行整个请求；同一方法上的其他规则仍会继续执行。
+        /// WhenNull.Intercept 会为当前请求生成空值标识并继续参与限流，适合 Cookie、Header、Query、Form 等缺失时仍需要兜底限流的场景。
+        /// </remarks>
         public WhenNull WhenNull { set; get; } = WhenNull.Pass;
 
         /// <summary>

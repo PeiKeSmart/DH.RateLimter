@@ -6,9 +6,9 @@ public class CacheRateLimitStore<T> : IRateLimitStore<T>
 {
     private readonly ICache _cache;
 
-    public CacheRateLimitStore()
+    public CacheRateLimitStore(ICacheProvider cacheProvider)
     {
-        _cache = Pek.Webs.HttpContext.Current.RequestServices.GetRequiredService<ICacheProvider>().InnerCache;
+        _cache = cacheProvider.InnerCache;
     }
 
     public Task<bool> ExistsAsync(string id, CancellationToken cancellationToken = default)
